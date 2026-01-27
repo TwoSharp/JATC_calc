@@ -1,19 +1,51 @@
+import argparse
 import math
 import sys
 
 
-def _usage():
+#-----------------------------------------------------------------------------------
+#                   MISC
+#-----------------------------------------------------------------------------------
+
+def _usage(param=None):
     # prints usage page and exits
     print(
-        "Usage: JATC_calc.py [--find][--radial][--convert]\n\n"
+        "Usage: JATC_calc.py [option][args]\n"
+        " poor mans calculator :')\n\n"
+        "[--angle][--side][--radial][--parallel][--convert] [args]]\n"
+    )
+    if param == "parallel":
+        print("--parallel [diameter(in)][elevation height(in)][elevation angle(in)][optional: # of sections]:\n\ttakes arguments in given order and returns stretchout, elevation opposite height, and section width\n")
+    else:
+        print(
         "--find: use to find a side or angle in a right triangle\n"
         "\tneed at least one angle and one side or two sides\n"
         "--radial [decimal]: use for radial math\n"
         "\tneed top length (diameter), bottom diameter, and taper height\n"
         "\toptional argument [decimal]: output measurements in decimal form\n"
-        "--convert: use to convert decimal to fraction (only works with inches)\n"
-    )
+        "\t--convert: use to convert decimal to fraction (only works with inches)\n")
+
     sys.exit(0)
+
+def num_to_dec(num):
+    str_num = str(num)
+    if '.' in str_num:
+        return num
+    elif '/' in str_num:
+        num = frac_to_dec(num)
+        return num
+    else:
+        return float(num)
+
+def num_to_frac(num):
+    str_num = str(num)
+    if '/' in str_num:
+        return num
+    elif '.' in str_num:
+        num = dec_to_frac(num)
+        return num
+    else:
+        return str_num
 
 def dec_to_frac(num):
 # takes a decimal and converts it to a fraction
@@ -72,7 +104,7 @@ def dec_to_frac(num):
                 return dec
     except IndexError:
         print("invalid input. exiting...")
-        sys.exit(1)
+        sys.exit(0)
 
 def frac_to_dec(num):
     # takes a number (possibly with a fraction) of type string and converts to an int or float
@@ -81,14 +113,14 @@ def frac_to_dec(num):
     inches = 0
     decimal = 0
 
-    if type(num) != str:
-        num = str(num)
-
     def get_fraction(frac):
             numerator = float(frac.split('/')[0])
             denominator = float(frac.split('/')[1])
 
             return numerator / denominator
+
+    if type(num) != str:
+        num = str(num)
     
     try:
         num = num.split(' ')
@@ -101,22 +133,40 @@ def frac_to_dec(num):
                     continue
                 inches = int(num[index])
             elif '/' in value:
-                decimal = get_fraction(num[index][:-1])
+                if '"' in value:
+                    decimal = get_fraction(num[index][:-1])
+                    continue
+                decimal = get_fraction(num[index])
     except Exception as e:
-        print(f'Error enumerating through num list: {e}')
+        print(f'Error enumerating through num list in frac_to_dec: {e}')
 
     return (feet * 12) + inches + decimal
 
-# RADIAL MATH FUNCS ----------------------------------------------------------------
+
+    ##### UNIT WEIGHTS in lbs/ft^3 #####
+'''
+steel = 490
+aluminum = 165
+concrete = 150
+wood = 50
+water = 62
+sand and gravel = 120
+copper = 560
+oil = 58
+'''
+
+#-----------------------------------------------------------------------------------
+#                   RADIAL MATH FUNCS
+#-----------------------------------------------------------------------------------
 
 def get_chord_len(arc, rad):
     cen_angle = arc / rad
-    chord_len = (2 * rad) * math.sin(cen_angle/2)
+    chord_len = (2 * rad) * math.sin(cen_angle / 2)
 
     return chord_len
 
-def get_stretchout(rad):
-    stretchout = rad * math.pi
+def get_stretchout(dia):
+    stretchout = dia * math.pi
 
     return stretchout
 
@@ -145,7 +195,7 @@ def get_slope_intercept():
     pass
 
 #-----------------------------------------------------------------------------------
-#                   FINDING MISSING TRIANGLE MATH
+#                   FINDING MISSING SIDE FUNCS
 #-----------------------------------------------------------------------------------
 
 def get_pythagorean(hypotenuse=None, side=None, second=None):
@@ -162,24 +212,6 @@ def get_pythagorean(hypotenuse=None, side=None, second=None):
     print(f'\nhypotenuse is {hypotenuse}')
     sys.exit(1)
 
-def arc_SOH(hypotenuse=None, side=None, angle=None):
-    angle = math.asin(side/hypotenuse)
-    print(f"your angle is {round(math.degrees(angle), 3)}")
-
-    sys.exit(1)
-
-def arc_CAH(hypotenuse=None, side=None, angle=None):
-    angle = math.acos(side/hypotenuse)
-    print(f"your angle is {round(math.degrees(angle), 3)}")
-
-    sys.exit(1)
-
-def arc_TOA(adj=None, opp=None, angle=None):
-    angle = math.atan(opp/adj)
-    print(f"your angle is {round(math.degrees(angle), 3)}")
-
-    sys.exit(1)
-
 def SOH(angle=None, side=None, hypotenuse=None):
     if hypotenuse:
         side = math.sin(math.degrees(angle)) * hypotenuse
@@ -190,6 +222,7 @@ def SOH(angle=None, side=None, hypotenuse=None):
         hypotenuse = side / math.sin(angle)
 
         print(f'your hypotenuse is {round(hypotenuse, 2)}')
+        sys.exit(1)
     else:
         print('error in SOH, else, exiting...')
         sys.exit(0)
@@ -232,6 +265,32 @@ def SOHCAHTOA(angle=None, side=None, hypotenuse=None):
     else:
         print('unknown input. exiting...')
         sys.exit(0)
+
+#-----------------------------------------------------------------------------------
+#                   FINDING MISSING ANGLE FUNCS
+#-----------------------------------------------------------------------------------
+
+def arc_SOH(hypotenuse=None, side=None, angle=None):
+    angle = math.asin(side/hypotenuse)
+    print(f"your angle is {round(math.degrees(angle), 3)}")
+
+    sys.exit(1)
+
+def arc_CAH(hypotenuse=None, side=None, angle=None):
+    angle = math.acos(side/hypotenuse)
+    print(f"your angle is {round(math.degrees(angle), 3)}")
+
+    sys.exit(1)
+
+def arc_TOA(adj=None, opp=None, angle=None):
+    angle = math.atan(opp/adj)
+    print(f"your angle is {round(math.degrees(angle), 3)}")
+
+    sys.exit(1)
+
+#-----------------------------------------------------------------------------------
+#                   FINDING MISSING TRIANGLE MAIN
+#-----------------------------------------------------------------------------------
 
 def find_whats_missing():
     angle_or_side = input('angle or side? ').lower()
@@ -288,7 +347,8 @@ def find_missing_angle():
     if 'y' in third_side_q:
         angle = float(input("degree of second angle (not 90): "))
         print(f'your third angle is {round(90 - angle, 2)}')
-        sys.exit(1)
+        
+        return
 
     num_sides = int(input("how many sides do you have? "))
     if num_sides == 2:
@@ -341,7 +401,9 @@ def find_missing_angle():
         print("you need at least one side and an angle to find a second angle. exiting...")
         sys.exit(0)
 
-#------------------------------------------------------------------------------------------- 
+#-----------------------------------------------------------------------------------
+#                   RADIAL MATH MAIN
+#-----------------------------------------------------------------------------------
 
 def find_swing(dec=None, pitch=None):
 
@@ -378,7 +440,7 @@ def find_swing(dec=None, pitch=None):
         print(f"angle: {round(math.degrees(angle), 3)}")
         print(f"chord length: {round(chord, 2)}")
 
-        sys.exit(1)
+        return
 
     print(f"\nbot stretchout: {dec_to_frac(bot_stretchout)}")
     print(f"top radius: {dec_to_frac(top_radius)}")
@@ -388,13 +450,98 @@ def find_swing(dec=None, pitch=None):
     if pitch:
         pass
 
-    sys.exit(1)
+    return
+
+#-----------------------------------------------------------------------------------
+#                   Parallel Line
+#-----------------------------------------------------------------------------------
+
+    #   takes three required args and one optional:
+    #   in order -->  [diameter][elevation height][elevation angle][optional: # of sections]
+
+    #   returns circumference, section widths, opposite elevation height
+
+class ParallelLine:
+    def __init__(self, args):
+        self.args = args
+        self.diameter = num_to_dec(args.parallel[0])
+        self.el_height = num_to_dec(args.parallel[1])
+        self.el_angle = args.parallel[2]
+        if len(sys.argv) == 6:
+            self.section = int(args.parallel[3])
+        else:
+            self.section = 12
+
+    def get_stretchout(self):
+        # get circumference
+        return math.pi * self.diameter
+
+    def get_sections(self):
+        # circumference / # of sections
+        return dec_to_frac(self.diameter / self.section)
+    
+    def get_elevation_height(self):
+        return dec_to_frac(self.diameter / math.cos(self.el_angle))
+
+    def run(self):
+        circumference = self.get_stretchout(self.args.diameter)
+        section_size = self.get_sections(circumference)
+        elevation_height = self.get_elevation_height(self.args.angle, self.args.diameter)
+        return circumference, section_size, elevation_height
+
+
+#-----------------------------------------------------------------------------------
+#                       MAIN
+#-----------------------------------------------------------------------------------
 
 def main():
-    # option: if --decimal, output to decimal instead of fractional
+    # option to add: if --decimal, output to decimal instead of fractional
+    # possibly add option of verbosity
+    # add try catch to everything
+    # possibly port some function groups to classes
+    
+    # eventually create front end and host this on web, make for security project with \\
+    # login credentials, potential vulnerability testing, honeypot type deal
+
+    parser = argparse.ArgumentParser(
+        prog="JATC_calc",
+        description="poor mans calculator",
+    )
+    parser.add_argument('-a', '--angle', nargs='?', help='find angle')
+    parser.add_argument('-s', '--side', nargs='?', help='find side')
+    parser.add_argument('-r', '--radial', nargs='?', help='radial line layout')
+    parser.add_argument('-c', '--convert', action='store_true', help='input to encrypt')
+    parser.add_argument('-p', '--parallel', nargs='*', help='parallel line layout')
+    args = parser.parse_args()
+
     if len(sys.argv) < 2:
         _usage()
-    elif sys.argv[1] == '--find':
+    elif args.angle:
+        pass
+    elif args.side:
+        pass
+    elif args.radial:
+        pass
+    elif args.parallel:
+        # args: diamater, elevation height, elevation angle, (opt) # of sections
+
+        if len(sys.argv) < 5:
+            _usage(param='parallel')
+        try:
+            (sys.argv[2])
+        except:
+            pass
+        parallel = ParallelLine(args)
+        circum, section_size, elevation_height = parallel.run()
+        print(f'')
+        sys.exit(0)
+    elif args.convert:
+        pass
+    else:
+        _usage()
+
+
+    if sys.argv[1] == '--find':
         if len(sys.argv) == 3:
             if sys.argv[2] == 'angle':
                 find_missing_angle()
