@@ -14,25 +14,29 @@ def _usage(param=None):
         " poor mans calculator :')\n\n"
         "[--angle][--side][--radial][--parallel][--convert] [args]]\n"
     )
-    if param == "parallel":
-        print("--parallel [diameter(in)][elevation height(in)][elevation angle(in)][optional: # of sections]:\n\ttakes arguments in given order and returns stretchout, elevation opposite height, and section width\n")
-    else:
-        print(
-        "--find: use to find a side or angle in a right triangle\n"
-        "\tneed at least one angle and one side or two sides\n"
-        "--radial [decimal]: use for radial math\n"
-        "\tneed top length (diameter), bottom diameter, and taper height\n"
-        "\toptional argument [decimal]: output measurements in decimal form\n"
-        "\t--convert: use to convert decimal to fraction (only works with inches)\n")
+    print(
+    "--parallel [diameter(in)][elevation height(in)][elevation angle(in)][optional: # of sections]:\n\ttakes arguments in given order and returns stretchout, elevation opposite height, and section width\n"
+    "--side: find the side of a right triangle"
+    "--angle: find the angle in a right triangle"
+    "--radial [decimal]: use for radial math"
+    "\tneed top length (diameter), bottom diameter, and taper height\n"
+    "\toptional argument [decimal]: output measurements in decimal form\n"
+    "\t--convert: use to convert decimal to fraction (only works with inches)\n")
 
     sys.exit(0)
 
 def num_to_dec(num):
     str_num = str(num)
+
+    for n in str_num:
+        if n not in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', '/']:
+            print(f'input "{num}" invalid, exiting...')
+            sys.exit(0)
+
     if '.' in str_num:
-        return num
+        return float(num)
     elif '/' in str_num:
-        num = frac_to_dec(num)
+        num = frac_to_dec(str_num)
         return num
     else:
         return float(num)
@@ -48,7 +52,7 @@ def num_to_frac(num):
         return str_num
 
 def dec_to_frac(num):
-# takes a decimal and converts it to a fraction
+# takes a decimal and converts it to a fraction to the nearest 16th
 # return type string
     if type(num) != str:
         num = str(num)
@@ -61,36 +65,37 @@ def dec_to_frac(num):
     try:
         if num[1]:
             dec = float( '.' + num[1])
-
-            if dec <= 1/16 + 1/32:
+            if dec < 1/32:
+                dec = '0'
+            elif dec < 1/16 + 1/32:
                 dec = '1/16'
-            elif dec <= 1/8 + 1/32:
+            elif dec < 1/8 + 1/32:
                 dec = '1/8'
-            elif dec <= 3/16 + 1/32:
+            elif dec < 3/16 + 1/32:
                 dec = '3/16'
-            elif dec <= 1/4 + 1/32:
+            elif dec < 1/4 + 1/32:
                 dec = '1/4'
-            elif dec <= 5/16 + 1/32:
+            elif dec < 5/16 + 1/32:
                 dec = '5/16'
-            elif dec <= 3/8 + 1/32:
+            elif dec < 3/8 + 1/32:
                 dec = '3/8'
-            elif dec <= 7/16 + 1/32:
+            elif dec < 7/16 + 1/32:
                 dec = '7/16'
-            elif dec <= 1/2 + 1/32:
+            elif dec < 1/2 + 1/32:
                 dec = '1/2'
-            elif dec <= 9/16 + 1/32:
+            elif dec < 9/16 + 1/32:
                 dec = '9/16'
-            elif dec <= 5/8 + 1/32:
+            elif dec < 5/8 + 1/32:
                 dec = '5/8'
-            elif dec <= 11/16 + 1/32:
+            elif dec < 11/16 + 1/32:
                 dec = '11/16'
-            elif dec <= 3/4 + 1/32:
+            elif dec < 3/4 + 1/32:
                 dec = '3/4'
-            elif dec <= 13/16 + 1/32:
+            elif dec < 13/16 + 1/32:
                 dec = '13/16'
-            elif dec <= 7/8 + 1/32:
+            elif dec < 7/8 + 1/32:
                 dec = '7/8'
-            elif dec <= 31/32:
+            elif dec < 15/16 + 1/32:
                 dec = '15/16'
             else:
                 if whole:
@@ -98,12 +103,15 @@ def dec_to_frac(num):
                 else:
                     return 1
                 
-            if whole:
-                return f"{whole} {dec}"
+            if whole and whole != '0':
+                return f"{whole}-{dec}"
             else:
                 return dec
     except IndexError:
-        print("invalid input. exiting...")
+        print(f"{input} is invalid input. exiting...")
+        sys.exit(0)
+    except Exception:
+        print("unknown error, exiting...")
         sys.exit(0)
 
 def frac_to_dec(num):
@@ -198,6 +206,63 @@ def get_slope_intercept():
 #                   FINDING MISSING SIDE FUNCS
 #-----------------------------------------------------------------------------------
 
+    # num_sides (1 or 2)
+    #           if < 2   --> angle
+    #                     adj or opp
+    #           if 2 ---> pythagorean
+
+    # takes [num_sides] if num_sides == 1: [angle][adj or opp]
+    # returns side length
+
+
+class FindSide:
+    def __init__(self, args):
+        self.args = args
+        self.num_sides = args.side[0]
+        
+    def run(self):
+        pass
+
+def find_missing_side():
+    num_sides = int(input('how many sides do you have? '))
+
+    if num_sides == 2:
+        hyp_q = input('is one of them the hypotenuse? ').lower()
+        if 'y' in hyp_q:
+            hypotenuse = float(input('length of hypotenuse: '))
+            other = float(input('length of other side: '))
+            get_pythagorean(hypotenuse, second=other)
+        elif 'n' in hyp_q:
+            side = float(input("length of first side: "))
+            second = float(input("length of second side: "))
+            get_pythagorean(side=side, second=second)
+    elif num_sides == 0:
+        print('you need at least one side to find a second side. exiting...')
+        sys.exit(0)
+    elif num_sides == 1:
+        if 'y' in input('do you have at least one angle? ').lower():
+            find_hypot_q = input("is the side you're finding the hypotenuse? ").lower()
+            if 'y' in find_hypot_q:
+                side = float(input("length of side: "))
+                angle = float(input("degree of angle: "))
+                SOHCAHTOA(angle=angle, side=side)
+            elif 'n' in find_hypot_q:
+                have_hyp_q = input("do you have the hypotenuse? ").lower()
+                if 'y' in have_hyp_q:
+                    hypotenuse = float(input('length of hypotenuse: '))
+                    angle = math.radians(float(input("angle degree: ")))
+                    SOHCAHTOA(angle=angle, hypotenuse=hypotenuse)
+                elif 'n' in have_hyp_q:
+                        side = float(input("length of side: "))
+                        angle = float(input("angle degree: "))
+                        SOHCAHTOA(angle=angle, side=side)
+        else:
+            print('you need at least one angle and one side. exiting...')
+            sys.exit(0)
+    else:
+        print("invalid number of sides. exiting...")
+        sys.exit(0)
+
 def get_pythagorean(hypotenuse=None, side=None, second=None):
     if hypotenuse is not None:
         third = hypotenuse**2 - second**2
@@ -216,13 +281,11 @@ def SOH(angle=None, side=None, hypotenuse=None):
     if hypotenuse:
         side = math.sin(math.degrees(angle)) * hypotenuse
 
-        print(f'the length of your side is {round(side, 2)}')
-        sys.exit(1)
+        print(round(side, 2))
     elif not hypotenuse:
         hypotenuse = side / math.sin(angle)
 
-        print(f'your hypotenuse is {round(hypotenuse, 2)}')
-        sys.exit(1)
+        print(round(hypotenuse, 2))
     else:
         print('error in SOH, else, exiting...')
         sys.exit(0)
@@ -231,19 +294,19 @@ def CAH(angle=None, side=None, hypotenuse=None):
     if hypotenuse:
         side = math.cos(math.degrees(angle)) * hypotenuse
 
-        print(f'the length of your side is {round(side, 2)}')
-        sys.exit(1)
+        print(round(side, 2))
+        return round(side, 2)
     elif not hypotenuse:
         hypotenuse = side / math.cos(angle)
 
-        print(f'your hypotenuse is {round(hypotenuse, 2)}')
-        sys.exit(1)
+        print(round(hypotenuse, 2))
+        return round(hypotenuse, 2)
     else:
         print("error in CAH, else, exiting...")
         sys.exit(0)
 
 def TOA(angle, side=None, hypotenuse=None):
-    print('Tangent not working. come back later or try using Sine or Cosine. exiting...')
+    print('Function under construction, come back later')
     sys.exit(0)
 
 def SOHCAHTOA(angle=None, side=None, hypotenuse=None):
@@ -292,55 +355,6 @@ def arc_TOA(adj=None, opp=None, angle=None):
 #                   FINDING MISSING TRIANGLE MAIN
 #-----------------------------------------------------------------------------------
 
-def find_whats_missing():
-    angle_or_side = input('angle or side? ').lower()
-    if 'angle' in angle_or_side:
-        find_missing_angle()
-    elif 'side' in angle_or_side:
-        find_missing_side()
-    else:
-        print("unknown input. exiting...")
-        sys.exit(0)
-
-def find_missing_side():
-    num_sides = int(input('how many sides do you have? '))
-
-    if num_sides == 2:
-        hyp_q = input('is one of them the hypotenuse? ').lower()
-        if 'y' in hyp_q:
-            hypotenuse = float(input('length of hypotenuse: '))
-            other = float(input('length of other side: '))
-            get_pythagorean(hypotenuse, second=other)
-        elif 'n' in hyp_q:
-            side = float(input("length of first side: "))
-            second = float(input("length of second side: "))
-            get_pythagorean(side=side, second=second)
-    elif num_sides == 0:
-        print('you need at least one side to find a second side. exiting...')
-        sys.exit(0)
-    elif num_sides == 1:
-        if 'y' in input('do you have at least one angle? ').lower():
-            find_hypot_q = input("is the side you're finding the hypotenuse? ").lower()
-            if 'y' in find_hypot_q:
-                side = float(input("length of side: "))
-                angle = float(input("degree of angle: "))
-                SOHCAHTOA(angle=angle, side=side)
-            elif 'n' in find_hypot_q:
-                have_hyp_q = input("do you have the hypotenuse? ").lower()
-                if 'y' in have_hyp_q:
-                    hypotenuse = float(input('length of hypotenuse: '))
-                    angle = math.radians(float(input("angle degree: ")))
-                    SOHCAHTOA(angle=angle, hypotenuse=hypotenuse)
-                elif 'n' in have_hyp_q:
-                        side = float(input("length of side: "))
-                        angle = float(input("angle degree: "))
-                        SOHCAHTOA(angle=angle, side=side)
-        else:
-            print('you need at least one angle and one side. exiting...')
-            sys.exit(0)
-    else:
-        print("invalid number of sides. exiting...")
-        sys.exit(0)
 
 def find_missing_angle():
     third_side_q = input("are you finding your third angle? ")
@@ -456,38 +470,81 @@ def find_swing(dec=None, pitch=None):
 #                   Parallel Line
 #-----------------------------------------------------------------------------------
 
-    #   takes three required args and one optional:
-    #   in order -->  [diameter][elevation height][elevation angle][optional: # of sections]
-
-    #   returns circumference, section widths, opposite elevation height
+    #   takes [diameter][elevation height][elevation angle] and [optional: # of sections]
+    #   returns circumference, section widths, opposite elevation height, radius,
+    #              eclipse radius, eclipse cut sheet size, and min cut sheet size
 
 class ParallelLine:
     def __init__(self, args):
         self.args = args
         self.diameter = num_to_dec(args.parallel[0])
         self.el_height = num_to_dec(args.parallel[1])
-        self.el_angle = args.parallel[2]
-        if len(sys.argv) == 6:
+        self.el_angle = math.radians(num_to_dec(args.parallel[2]))
+        if len(args.parallel) == 5:
             self.section = int(args.parallel[3])
         else:
             self.section = 12
 
     def get_stretchout(self):
         # get circumference
-        return math.pi * self.diameter
+        self.circumference = math.pi * self.diameter
+        return self.circumference
 
-    def get_sections(self):
+    def get_section_width(self):
         # circumference / # of sections
-        return dec_to_frac(self.diameter / self.section)
+        return self.diameter / self.section
     
     def get_elevation_height(self):
-        return dec_to_frac(self.diameter / math.cos(self.el_angle))
+        # COS of diameter with elevation angle
+        self.elevation_calculated = CAH(angle=self.el_angle, side=self.diameter)
+        return self.elevation_calculated
+
+    def get_run(self):
+        return SOH(angle=math.radians(self.el_angle), side=self.elevation_calculated)
+    
+    def get_radius(self):
+        self.radius = self.diameter / 2
+        return self.radius
+    
+    def get_eclipse_radius(self):
+        return self.run / 2
+    
+    def get_sheet_size(self):
+        # return circumference + diameter + 6  x  elevation height + elevation_calculated + radius + 2
+        height = self.get_radius() + self.get_elevation_height + self.elevation_calculated + 5
+        width = self.diameter + self.circumference + 5
+
+    def get_eclipse_sheet_size(self):
+        height = self.get_run() + 2
+        width = self.diameter() + 2
+
+        return height, width
+
 
     def run(self):
-        circumference = self.get_stretchout(self.args.diameter)
-        section_size = self.get_sections(circumference)
-        elevation_height = self.get_elevation_height(self.args.angle, self.args.diameter)
-        return circumference, section_size, elevation_height
+        circumference = dec_to_frac(self.get_stretchout())
+        section_width = dec_to_frac(self.get_section_width())
+        elevation_calculated = self.get_elevation_height()
+        self.run = self.get_run()
+        run = dec_to_frac(self.run)
+        radius = dec_to_frac(get_radius())
+        eclipse_radius = dec_to_frac(self.get_eclipse_radius())
+        sheet_size_height, sheet_size_width = self.get_sheet_size()
+        eclipse_height, eclipse_width = self.get_eclipse_sheet_size()
+
+        
+        return circumference, section_width, elevation_calculated, self.run, radius, eclipse_radius, run, sheet_size_height, sheet_size_width, eclipse_height, eclipse_width
+    
+
+#-----------------------------------------------------------------------------------
+#                      AREA
+#-----------------------------------------------------------------------------------
+
+def area_tri(args):
+    inches = int(args.area_tri[0]) * int(args.area_tri[1]) / 2
+    feet = inches / 144
+    print(f'sq inches = {inches}')
+    print(f'sq feet = {feet}')
 
 
 #-----------------------------------------------------------------------------------
@@ -496,63 +553,57 @@ class ParallelLine:
 
 def main():
     # option to add: if --decimal, output to decimal instead of fractional
-    # possibly add option of verbosity
-    # add try catch to everything
-    # possibly port some function groups to classes
+    # add option of verbosity
+
+    # turn each section into a class
     
-    # eventually create front end and host this on web, make for security project with \\
-    # login credentials, potential vulnerability testing, honeypot type deal
 
     parser = argparse.ArgumentParser(
         prog="JATC_calc",
         description="poor mans calculator",
     )
-    parser.add_argument('-a', '--angle', nargs='?', help='find angle')
-    parser.add_argument('-s', '--side', nargs='?', help='find side')
+    parser.add_argument('-a', '--angle', action='store_true', help='find angle')
+    parser.add_argument('-s', '--side', action='store_true', help='find side')
     parser.add_argument('-r', '--radial', nargs='?', help='radial line layout')
     parser.add_argument('-c', '--convert', action='store_true', help='input to encrypt')
     parser.add_argument('-p', '--parallel', nargs='*', help='parallel line layout')
+    parser.add_argument('-t', '--area-tri', nargs='*', help='blah')
     args = parser.parse_args()
 
     if len(sys.argv) < 2:
         _usage()
     elif args.angle:
-        pass
+        find_missing_angle()
+        sys.exit(0)
     elif args.side:
-        pass
+        find_missing_side()
+        sys.exit(0)
     elif args.radial:
         pass
     elif args.parallel:
-        # args: diamater, elevation height, elevation angle, (opt) # of sections
+        # args: diamater, elevation height, elevation angle, (optional) # of sections
+        # returns: circumference, section widths, opposite elevation height
 
         if len(sys.argv) < 5:
             _usage(param='parallel')
-        try:
-            (sys.argv[2])
-        except:
-            pass
+
         parallel = ParallelLine(args)
         circum, section_size, elevation_height = parallel.run()
-        print(f'')
+
+        print(f'\nYour circumference is: {circum}')
+        print(f'Your size of each section is: {section_size}')
+        print(f'Your total elevation height is: {elevation_height}')
         sys.exit(0)
     elif args.convert:
         pass
+    elif args.area_tri:
+        area_tri(args)
+        sys.exit(0)
     else:
         _usage()
 
 
-    if sys.argv[1] == '--find':
-        if len(sys.argv) == 3:
-            if sys.argv[2] == 'angle':
-                find_missing_angle()
-                sys.exit(1)
-
-            if sys.argv[2] == 'side':
-                find_missing_side()
-                sys.exit(1)
-
-        find_whats_missing()
-    elif sys.argv[1] == '--radial':
+    if sys.argv[1] == '--radial':
         if len(sys.argv) > 2:
             # fix to allow for both dec and pitch
             if 'dec' in sys.argv[2]:
